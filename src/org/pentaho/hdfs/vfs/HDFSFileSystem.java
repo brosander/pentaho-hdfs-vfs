@@ -33,7 +33,7 @@ public class HDFSFileSystem extends AbstractFileSystem implements FileSystem {
   private static org.apache.hadoop.fs.FileSystem mockHdfs;
   private org.apache.hadoop.fs.FileSystem hdfs;
 
-  protected HDFSFileSystem(final FileName rootName, final FileSystemOptions fileSystemOptions) {
+  public HDFSFileSystem(final FileName rootName, final FileSystemOptions fileSystemOptions) {
     super(rootName, null, fileSystemOptions);
   }
 
