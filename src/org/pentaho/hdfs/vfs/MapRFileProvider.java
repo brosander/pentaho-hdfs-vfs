@@ -21,6 +21,16 @@ import org.apache.commons.vfs.FileName;
 import org.apache.commons.vfs.FileSystem;
 import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileSystemOptions;
+import org.apache.commons.vfs.provider.URLFileName;
+import org.mortbay.util.MultiMap;
+import org.mortbay.util.UrlEncoded;
+import org.pentaho.di.core.auth.AuthenticationPersistenceManager;
+import org.pentaho.di.core.auth.core.AuthenticationConsumptionException;
+import org.pentaho.di.core.auth.core.AuthenticationManager;
+import org.pentaho.di.core.auth.core.AuthenticationPerformer;
+import org.pentaho.hdfs.vfs.auth.HDFSFileSystemAuthenticationConsumerArg;
+import org.pentaho.hdfs.vfs.auth.MapRFSFileSystemKerberosAuthenticationConsumer;
+import org.pentaho.hdfs.vfs.auth.MapRFSFileSystemNoAuthenticationConsumer;
 
 /**
  * Provides access to the MapR FileSystem VFS implementation.
@@ -43,6 +53,31 @@ public class MapRFileProvider extends HDFSFileProvider {
 
   @Override
   protected FileSystem doCreateFileSystem(FileName name, FileSystemOptions fileSystemOptions) throws FileSystemException {
-    return new MapRFileSystem(name, fileSystemOptions);
+    MultiMap params = new MultiMap();
+    UrlEncoded.decodeTo( ( (URLFileName) name ).getQueryString(), params, "UTF-8" );
+    if ( params.containsKey( AUTH_PROVIDER ) ) {
+      AuthenticationManager manager = AuthenticationPersistenceManager.getAuthenticationManager();
+      manager.registerConsumerClass( MapRFSFileSystemKerberosAuthenticationConsumer.class );
+      manager.registerConsumerClass( MapRFSFileSystemNoAuthenticationConsumer.class );
+      AuthenticationPerformer<FileSystem, HDFSFileSystemAuthenticationConsumerArg> performer =
+          manager.getAuthenticationPerformer( FileSystem.class, HDFSFileSystemAuthenticationConsumerArg.class, String
+              .valueOf( params.get( AUTH_PROVIDER ) ) );
+      if ( performer == null ) {
+        throw new FileSystemException( "Unable to find compatible authentication provider with id "
+            + params.getString( AUTH_PROVIDER ) );
+      } else {
+        try {
+          return performer.perform( new HDFSFileSystemAuthenticationConsumerArg( name, fileSystemOptions ) );
+        } catch ( AuthenticationConsumptionException e ) {
+          if ( e.getCause() instanceof FileSystemException) {
+            throw (FileSystemException) e.getCause();
+          } else {
+            throw new FileSystemException( e );
+          }
+        }
+      }
+    } else {
+      return new MapRFileSystem(name, fileSystemOptions);
+    }
   }
 }
