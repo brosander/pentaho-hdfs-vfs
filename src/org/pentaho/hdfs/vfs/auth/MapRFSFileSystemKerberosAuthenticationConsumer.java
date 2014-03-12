@@ -10,16 +10,20 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import org.pentaho.di.core.auth.AuthenticationConsumerPlugin;
 import org.pentaho.di.core.auth.KerberosAuthenticationProvider;
+import org.pentaho.di.core.auth.KerberosUtil;
 import org.pentaho.di.core.auth.core.AuthenticationConsumer;
 import org.pentaho.di.core.auth.core.AuthenticationConsumptionException;
-import org.pentaho.hdfs.vfs.auth.proxy.LoginContextInvocationHandler;
+import org.pentaho.di.core.auth.kerberos.LoginContextInvocationHandler;
 import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystem;
 import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystemImpl;
 
 import com.mapr.fs.proto.Security.TicketAndKey;
 import com.mapr.login.client.MapRLoginHttpsClient;
 
+@AuthenticationConsumerPlugin( id = "MapRFSFileSystemKerberosAuthenticationConsumer",
+    name = "MapRFSFileSystemKerberosAuthenticationConsumer" )
 public class MapRFSFileSystemKerberosAuthenticationConsumer implements
     AuthenticationConsumer<HadoopFileSystem, KerberosAuthenticationProvider> {
   private MapRFSFileSystemAuthenticationConsumerArg maprFSFileSystemAuthenticationConsumerArg;
@@ -62,6 +66,7 @@ public class MapRFSFileSystemKerberosAuthenticationConsumer implements
           return new MapRLoginHttpsClient().getMapRCredentialsViaKerberos( 1209600000L );
         }
       } );
+      System.out.println(maprTicket);
       return LoginContextInvocationHandler.forObject( new HadoopFileSystemImpl( org.apache.hadoop.fs.FileSystem
           .get( maprFSFileSystemAuthenticationConsumerArg.getConf() ) ), loginContext, new HashSet<Class<?>>( Arrays
           .<Class<?>> asList( HadoopFileSystem.class ) ) );
@@ -70,8 +75,6 @@ public class MapRFSFileSystemKerberosAuthenticationConsumer implements
     } catch ( LoginException e ) {
       throw new AuthenticationConsumptionException( e );
     } catch ( PrivilegedActionException e ) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
       throw new AuthenticationConsumptionException( e );
     }
   }

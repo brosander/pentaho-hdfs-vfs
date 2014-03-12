@@ -29,8 +29,6 @@ import org.pentaho.di.core.auth.core.AuthenticationConsumptionException;
 import org.pentaho.di.core.auth.core.AuthenticationManager;
 import org.pentaho.di.core.auth.core.AuthenticationPerformer;
 import org.pentaho.hdfs.vfs.auth.MapRFSFileSystemAuthenticationConsumerArg;
-import org.pentaho.hdfs.vfs.auth.MapRFSFileSystemKerberosAuthenticationConsumer;
-import org.pentaho.hdfs.vfs.auth.MapRFSFileSystemNoAuthenticationConsumer;
 import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystem;
 
 /**
@@ -75,8 +73,6 @@ public class MapRFileSystem extends HDFSFileSystem implements FileSystem {
       setFileSystemOptions( getFileSystemOptions(), conf );
 
       AuthenticationManager manager = AuthenticationPersistenceManager.getAuthenticationManager();
-      manager.registerConsumerClass( MapRFSFileSystemKerberosAuthenticationConsumer.class );
-      manager.registerConsumerClass( MapRFSFileSystemNoAuthenticationConsumer.class );
       AuthenticationPerformer<HadoopFileSystem, MapRFSFileSystemAuthenticationConsumerArg> performer =
           manager.getAuthenticationPerformer( HadoopFileSystem.class, MapRFSFileSystemAuthenticationConsumerArg.class,
               authProvider );
