@@ -30,12 +30,12 @@ import org.apache.commons.vfs.provider.AbstractFileObject;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystem;
 
 public class HDFSFileObject extends AbstractFileObject implements FileObject {
 
-  private FileSystem hdfs;
+  private HadoopFileSystem hdfs;
 
   protected HDFSFileObject(final FileName name, final HDFSFileSystem fileSystem) throws FileSystemException {
     super(name, fileSystem);

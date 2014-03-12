@@ -1,32 +1,38 @@
 package org.pentaho.hdfs.vfs.auth;
 
+import java.io.IOException;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-import javax.tools.FileObject;
 
-import org.apache.commons.vfs.FileSystem;
 import org.pentaho.di.core.auth.KerberosAuthenticationProvider;
 import org.pentaho.di.core.auth.core.AuthenticationConsumer;
 import org.pentaho.di.core.auth.core.AuthenticationConsumptionException;
-import org.pentaho.hdfs.vfs.MapRFileSystem;
 import org.pentaho.hdfs.vfs.auth.proxy.LoginContextInvocationHandler;
+import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystem;
+import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystemImpl;
+
+import com.mapr.fs.proto.Security.TicketAndKey;
+import com.mapr.login.client.MapRLoginHttpsClient;
 
 public class MapRFSFileSystemKerberosAuthenticationConsumer implements
-    AuthenticationConsumer<FileSystem, KerberosAuthenticationProvider> {
-  private HDFSFileSystemAuthenticationConsumerArg maprFSFileSystemAuthenticationConsumerArg;
+    AuthenticationConsumer<HadoopFileSystem, KerberosAuthenticationProvider> {
+  private MapRFSFileSystemAuthenticationConsumerArg maprFSFileSystemAuthenticationConsumerArg;
   private KerberosUtil kerberosUtil;
 
   public MapRFSFileSystemKerberosAuthenticationConsumer(
-      HDFSFileSystemAuthenticationConsumerArg maprFSFileSystemAuthenticationConsumerArg ) {
+      MapRFSFileSystemAuthenticationConsumerArg maprFSFileSystemAuthenticationConsumerArg ) {
     this.maprFSFileSystemAuthenticationConsumerArg = maprFSFileSystemAuthenticationConsumerArg;
     kerberosUtil = new KerberosUtil();
   }
 
   @Override
-  public FileSystem consume( KerberosAuthenticationProvider authenticationProvider )
+  public HadoopFileSystem consume( KerberosAuthenticationProvider authenticationProvider )
     throws AuthenticationConsumptionException {
     final LoginContext loginContext;
     try {
@@ -46,9 +52,27 @@ public class MapRFSFileSystemKerberosAuthenticationConsumer implements
     } catch ( LoginException e ) {
       throw new AuthenticationConsumptionException( e );
     }
-    
-    return LoginContextInvocationHandler.forObject( new MapRFileSystem( maprFSFileSystemAuthenticationConsumerArg
-        .getFileName(), maprFSFileSystemAuthenticationConsumerArg.getFileSystemOptions() ), loginContext,
-        new HashSet<Class<?>>( Arrays.<Class<?>> asList( FileSystem.class, FileObject.class ) ) );
+
+    try {
+      loginContext.login();
+      TicketAndKey maprTicket = Subject.doAs( loginContext.getSubject(), new PrivilegedExceptionAction<TicketAndKey>() {
+
+        @Override
+        public TicketAndKey run() throws Exception {
+          return new MapRLoginHttpsClient().getMapRCredentialsViaKerberos( 1209600000L );
+        }
+      } );
+      return LoginContextInvocationHandler.forObject( new HadoopFileSystemImpl( org.apache.hadoop.fs.FileSystem
+          .get( maprFSFileSystemAuthenticationConsumerArg.getConf() ) ), loginContext, new HashSet<Class<?>>( Arrays
+          .<Class<?>> asList( HadoopFileSystem.class ) ) );
+    } catch ( IOException e ) {
+      throw new AuthenticationConsumptionException( e );
+    } catch ( LoginException e ) {
+      throw new AuthenticationConsumptionException( e );
+    } catch ( PrivilegedActionException e ) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      throw new AuthenticationConsumptionException( e );
+    }
   }
 }

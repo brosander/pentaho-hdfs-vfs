@@ -27,11 +27,13 @@ import org.apache.commons.vfs.FileSystemOptions;
 import org.apache.commons.vfs.provider.AbstractFileSystem;
 import org.apache.commons.vfs.provider.GenericFileName;
 import org.apache.hadoop.conf.Configuration;
+import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystem;
+import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystemImpl;
 
 public class HDFSFileSystem extends AbstractFileSystem implements FileSystem {
 
-  private static org.apache.hadoop.fs.FileSystem mockHdfs;
-  private org.apache.hadoop.fs.FileSystem hdfs;
+  private static HadoopFileSystem mockHdfs;
+  private HadoopFileSystem hdfs;
 
   public HDFSFileSystem(final FileName rootName, final FileSystemOptions fileSystemOptions) {
     super(rootName, null, fileSystemOptions);
@@ -55,11 +57,11 @@ public class HDFSFileSystem extends AbstractFileSystem implements FileSystem {
    * 
    * @param hdfs the mock file system
    */
-  public static void setMockHDFSFileSystem(org.apache.hadoop.fs.FileSystem hdfs) {
+  public static void setMockHDFSFileSystem(HadoopFileSystem hdfs) {
     mockHdfs = hdfs;
   }
   
-  public org.apache.hadoop.fs.FileSystem getHDFSFileSystem() throws FileSystemException {
+  public HadoopFileSystem getHDFSFileSystem() throws FileSystemException {
     if (mockHdfs != null) {
       return mockHdfs;
     }
@@ -84,7 +86,7 @@ public class HDFSFileSystem extends AbstractFileSystem implements FileSystem {
       }
       setFileSystemOptions( getFileSystemOptions(), conf );
       try {
-        hdfs = org.apache.hadoop.fs.FileSystem.get(conf);
+        hdfs = new HadoopFileSystemImpl( org.apache.hadoop.fs.FileSystem.get(conf) );
       } catch (Throwable t) {
         throw new FileSystemException("Could not getHDFSFileSystem() for " + url, t);
       }

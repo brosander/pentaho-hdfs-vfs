@@ -37,6 +37,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.pentaho.hdfs.vfs.HDFSFileSystem;
 import org.pentaho.hdfs.vfs.HDFSFileSystemConfigBuilder;
+import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystemImpl;
 
 public class HDFSVFSTest {
 
@@ -56,7 +57,7 @@ public class HDFSVFSTest {
     cluster.waitActive();
 
     FileSystem hdfs = cluster.getFileSystem();
-    HDFSFileSystem.setMockHDFSFileSystem(hdfs);
+    HDFSFileSystem.setMockHDFSFileSystem( new HadoopFileSystemImpl( hdfs ) );
   }
 
   @AfterClass
