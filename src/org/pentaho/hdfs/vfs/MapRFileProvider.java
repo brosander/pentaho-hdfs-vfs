@@ -17,6 +17,8 @@
 
 package org.pentaho.hdfs.vfs;
 
+import java.net.URLClassLoader;
+
 import org.apache.commons.vfs.FileName;
 import org.apache.commons.vfs.FileSystem;
 import org.apache.commons.vfs.FileSystemException;
@@ -24,6 +26,10 @@ import org.apache.commons.vfs.FileSystemOptions;
 import org.apache.commons.vfs.provider.URLFileName;
 import org.mortbay.util.MultiMap;
 import org.mortbay.util.UrlEncoded;
+import org.pentaho.di.core.auth.AuthenticationConsumerPluginType;
+import org.pentaho.di.core.exception.KettlePluginException;
+import org.pentaho.hdfs.vfs.auth.MapRFSFileSystemKerberosAuthenticationConsumer.MapRFSFileSystemKerberosAuthenticationConsumerType;
+import org.pentaho.hdfs.vfs.auth.MapRFSFileSystemNoAuthenticationConsumer.MapRFSFileSystemNoAuthenticationConsumerType;
 
 /**
  * Provides access to the MapR FileSystem VFS implementation.
@@ -42,8 +48,12 @@ public class MapRFileProvider extends HDFSFileProvider {
    */
   public static final String FS_MAPR_IMPL = "com.mapr.fs.MapRFileSystem";
 
-  public MapRFileProvider() {
+  public MapRFileProvider() throws KettlePluginException {
     setFileNameParser( new MapRFileNameParser() );
+    AuthenticationConsumerPluginType.getInstance().registerPlugin( (URLClassLoader) getClass().getClassLoader(),
+        MapRFSFileSystemKerberosAuthenticationConsumerType.class );
+    AuthenticationConsumerPluginType.getInstance().registerPlugin( (URLClassLoader) getClass().getClassLoader(),
+        MapRFSFileSystemNoAuthenticationConsumerType.class );
   }
 
   @Override

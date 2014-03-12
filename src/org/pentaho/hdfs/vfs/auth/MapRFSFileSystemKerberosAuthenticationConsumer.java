@@ -11,10 +11,11 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.pentaho.di.core.auth.AuthenticationConsumerPlugin;
+import org.pentaho.di.core.auth.AuthenticationConsumerType;
 import org.pentaho.di.core.auth.KerberosAuthenticationProvider;
-import org.pentaho.di.core.auth.KerberosUtil;
 import org.pentaho.di.core.auth.core.AuthenticationConsumer;
 import org.pentaho.di.core.auth.core.AuthenticationConsumptionException;
+import org.pentaho.di.core.auth.kerberos.KerberosUtil;
 import org.pentaho.di.core.auth.kerberos.LoginContextInvocationHandler;
 import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystem;
 import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystemImpl;
@@ -22,10 +23,23 @@ import org.pentaho.hdfs.vfs.wrapper.HadoopFileSystemImpl;
 import com.mapr.fs.proto.Security.TicketAndKey;
 import com.mapr.login.client.MapRLoginHttpsClient;
 
-@AuthenticationConsumerPlugin( id = "MapRFSFileSystemKerberosAuthenticationConsumer",
-    name = "MapRFSFileSystemKerberosAuthenticationConsumer" )
 public class MapRFSFileSystemKerberosAuthenticationConsumer implements
     AuthenticationConsumer<HadoopFileSystem, KerberosAuthenticationProvider> {
+  @AuthenticationConsumerPlugin( id = "MapRFSFileSystemKerberosAuthenticationConsumer",
+      name = "MapRFSFileSystemKerberosAuthenticationConsumer" )
+  public static class MapRFSFileSystemKerberosAuthenticationConsumerType implements AuthenticationConsumerType {
+
+    @Override
+    public String getDisplayName() {
+      return "MapRFSFileSystemKerberosAuthenticationConsumer";
+    }
+
+    @Override
+    public Class<? extends AuthenticationConsumer<?, ?>> getConsumerClass() {
+      return MapRFSFileSystemKerberosAuthenticationConsumer.class;
+    }
+  }
+  
   private MapRFSFileSystemAuthenticationConsumerArg maprFSFileSystemAuthenticationConsumerArg;
   private KerberosUtil kerberosUtil;
 
