@@ -61,6 +61,7 @@ public class MapRFileSystem extends HDFSFileSystem implements FileSystem {
   public HadoopFileSystem getHDFSFileSystem() throws FileSystemException {
     if ( fs == null ) {
       Configuration conf = new Configuration();
+      conf.addResource( "core-site.xml" );
       conf.set( "fs.maprfs.impl", MapRFileProvider.FS_MAPR_IMPL );
 
       GenericFileName rootName = (GenericFileName) getRootName();

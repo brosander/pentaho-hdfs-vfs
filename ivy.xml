@@ -21,6 +21,7 @@
    	<dependency org="commons-vfs" name="commons-vfs" rev="20100924-pentaho" transitive="true"/>
     <dependency org="org.apache.hadoop" name="hadoop-core" rev="0.20.2" transitive="true" />
     <dependency org="org.apache.hadoop" name="hadoop-test" rev="0.20.2" transitive="false" />
+    <dependency org="pentaho" name="pentaho-hadoop-shims-api" rev="${project.revision}" transitive="false" changing="true"/>
 
 	<!-- test -->
     <dependency org="commons-io" name="commons-io" rev="1.4" conf="test->default"/>
