@@ -27,10 +27,8 @@ import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileSystemException;
 import org.apache.commons.vfs.FileType;
 import org.apache.commons.vfs.provider.AbstractFileObject;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.Path;
+import org.pentaho.bigdata.api.hdfs.HadoopFileStatus;
+import org.pentaho.bigdata.api.hdfs.HadoopFileSystem;
 
 public class HDFSFileObject extends AbstractFileObject implements FileObject {
 
@@ -43,31 +41,30 @@ public class HDFSFileObject extends AbstractFileObject implements FileObject {
 
   @Override
   protected long doGetContentSize() throws Exception {
-    return hdfs.getFileStatus(new Path(getName().getPath())).getLen();
+    return hdfs.getFileStatus(hdfs.getPath(getName().getPath())).getLen();
   }
 
   @Override
   protected OutputStream doGetOutputStream(boolean append) throws Exception {
+    OutputStream out;
     if (append) {
-      FSDataOutputStream out = hdfs.append(new Path(getName().getPath()));
-      return out;
+      out = hdfs.append(hdfs.getPath(getName().getPath()));
     } else {
-      FSDataOutputStream out = hdfs.create(new Path(getName().getPath()));
-      return out;
+      out = hdfs.create(hdfs.getPath(getName().getPath()));
     }
+    return out;
   }
 
   @Override
   protected InputStream doGetInputStream() throws Exception {
-    FSDataInputStream in = hdfs.open(new Path(getName().getPath()));
-    return in;
+    return hdfs.open(hdfs.getPath(getName().getPath()));
   }
 
   @Override
   protected FileType doGetType() throws Exception {
-    FileStatus status = null;
+    HadoopFileStatus status = null;
     try {
-      status = hdfs.getFileStatus(new Path(URLDecoder.decode(getName().getPath(), "UTF-8").replaceAll(" ", "+")));
+      status = hdfs.getFileStatus(hdfs.getPath(URLDecoder.decode(getName().getPath(), "UTF-8").replaceAll(" ", "+")));
     } catch (Exception ex) {
     }
 
@@ -82,32 +79,32 @@ public class HDFSFileObject extends AbstractFileObject implements FileObject {
 
   @Override
   public void doCreateFolder() throws Exception {
-    hdfs.mkdirs(new Path(getName().getPath()));
+    hdfs.mkdirs(hdfs.getPath(getName().getPath()));
   }
 
   @Override
   public void doDelete() throws Exception {
-    hdfs.delete(new Path(getName().getPath()), true);
+    hdfs.delete(hdfs.getPath(getName().getPath()), true);
   }
 
   @Override
   protected void doRename(FileObject newfile) throws Exception {
-    hdfs.rename(new Path(getName().getPath()), new Path(newfile.getName().getPath()));
+    hdfs.rename(hdfs.getPath(getName().getPath()), hdfs.getPath(newfile.getName().getPath()));
   }
 
   @Override
   protected long doGetLastModifiedTime() throws Exception {
-    return hdfs.getFileStatus(new Path(getName().getPath())).getModificationTime();
+    return hdfs.getFileStatus(hdfs.getPath(getName().getPath())).getModificationTime();
   }
 
   @Override
   protected void doSetLastModifiedTime(long modtime) throws Exception {
-    hdfs.setTimes(new Path(getName().getPath()), modtime, System.currentTimeMillis());
+    hdfs.setTimes(hdfs.getPath(getName().getPath()), modtime, System.currentTimeMillis());
   }
 
   @Override
   protected String[] doListChildren() throws Exception {
-    FileStatus[] statusList = hdfs.listStatus(new Path(getName().getPath()));
+    HadoopFileStatus[] statusList = hdfs.listStatus(hdfs.getPath(getName().getPath()));
     String[] children = new String[statusList.length];
     for (int i = 0; i < statusList.length; i++) {
       children[i] = URLEncoder.encode(statusList[i].getPath().getName(), "UTF-8");
